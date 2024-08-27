@@ -8,8 +8,15 @@ def upload_to_gcs(bucket_name, file_name, file_data):
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
-    blob.upload_from_file(file_data)
+
+    # Reset file pointer to the beginning
+    file_data.seek(0)
+    
+    # Upload the file
+    blob.upload_from_file(file_data, content_type='text/csv')
+    
     st.success(f"File {file_name} uploaded successfully to bucket: {bucket_name}.")
+
 
 # Streamlit app
 def main():
