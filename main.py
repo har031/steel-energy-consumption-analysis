@@ -35,14 +35,14 @@ def main():
 
     # File uploader with restrictions (CSV and size limit)
     uploaded_file = st.file_uploader(
-        "Upload your energy data file (CSV, max 50 MB)", 
+        "Upload your energy data file (CSV, max 200 MB)", 
         type=["csv"]
     )
     
     # Check file size and process upload
     if uploaded_file is not None:
-        if uploaded_file.size > 50 * 1024 * 1024:  # 50 MB limit
-            st.error("The file size exceeds the 50 MB limit. Please upload a smaller file.")
+        if uploaded_file.size > 200 * 1024 * 1024:  # 50 MB limit
+            st.error("The file size exceeds the 200 MB limit. Please upload a smaller file.")
         else:
             st.write("**File Details:**")
             st.write(f"Filename: {uploaded_file.name}")
