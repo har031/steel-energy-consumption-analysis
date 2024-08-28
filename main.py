@@ -7,13 +7,12 @@ import os
 def load_google_credentials_from_toml():
     toml_str = st.secrets["google"]
     credentials_dict = toml.loads(toml_str)
-    return json.dumps(credentials_dict)
+    return credentials_dict
 
 def upload_to_gcs(bucket_name, file_name, file_data):
     try:
         # Load credentials from TOML
-        credentials_json = load_google_credentials_from_toml()
-        credentials_dict = json.loads(credentials_json)
+        credentials_dict = load_google_credentials_from_toml()
         
         # Initialize Google Cloud Storage client with the credentials
         client = storage.Client.from_service_account_info(credentials_dict)
@@ -27,6 +26,7 @@ def upload_to_gcs(bucket_name, file_name, file_data):
         st.success(f"File {file_name} uploaded successfully to bucket: {bucket_name}.")
     except Exception as e:
         st.error(f"Error uploading file to GCS: {e}")
+
 
 # Streamlit app
 def main():
