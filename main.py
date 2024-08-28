@@ -5,7 +5,7 @@ import json
 import os
 
 def load_google_credentials_from_toml():
-    toml_str = st.secrets["google_credentials"]
+    toml_str = st.secrets["google"]
     credentials_dict = toml.loads(toml_str)
     return json.dumps(credentials_dict)
 
@@ -30,14 +30,39 @@ def upload_to_gcs(bucket_name, file_name, file_data):
 
 # Streamlit app
 def main():
-    st.title("Upload to Google Cloud Storage")
+    # Page configuration
+    st.set_page_config(page_title="Steel Energy Consumption Analysis", layout="wide")
+    
+    # Title and description
+    st.title("Steel Industry Energy Consumption Analysis")
+    st.markdown("""
+        **Upload a CSV file** with energy consumption data for analysis. 
+        The data should include relevant metrics for steel production and energy usage.
+    """)
+    
+    # Bucket name input
     bucket_name = st.text_input("Enter your GCS Bucket Name", "")
-    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 
-    if uploaded_file and st.button("Upload to GCS"):
-        upload_to_gcs(bucket_name, uploaded_file.name, uploaded_file)
+    # File uploader with restrictions (CSV and size limit)
+    uploaded_file = st.file_uploader(
+        "Upload your energy data file (CSV, max 200 MB)", 
+        type=["csv"]
+    )
+    
+    # Check file size and process upload
+    if uploaded_file is not None:
+        if uploaded_file.size > 200 * 1024 * 1024:  # 200 MB limit
+            st.error("The file size exceeds the 200 MB limit. Please upload a smaller file.")
+        else:
+            st.write("**File Details:**")
+            st.write(f"Filename: {uploaded_file.name}")
+            st.write(f"File type: {uploaded_file.type}")
+            st.write(f"File size: {uploaded_file.size / (1024 * 1024):.2f} MB")
+            
+            if st.button("Upload to GCS"):
+                print("Upload button clicked.")
+                # Upload the file to Google Cloud Storage
+                upload_file_to_gcs(bucket_name, uploaded_file)
 
 if __name__ == "__main__":
     main()
-
-
