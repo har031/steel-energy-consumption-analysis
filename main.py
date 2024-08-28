@@ -62,7 +62,7 @@ def main():
             if st.button("Upload to GCS"):
                 print("Upload button clicked.")
                 # Upload the file to Google Cloud Storage
-                upload_file_to_gcs(bucket_name, uploaded_file)
+                upload_to_gcs(bucket_name, uploaded_file.name, uploaded_file)
 
 if __name__ == "__main__":
     main()
