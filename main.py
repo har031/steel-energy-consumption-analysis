@@ -1,22 +1,26 @@
-
 import streamlit as st
 from google.cloud import storage
 import io
+import os
 
 # Initialize Google Cloud Storage client
-def upload_to_gcs(bucket_name, file_name, file_data):
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(file_name)
+def upload_file_to_gcs(bucket_name, file_data):
+    try:
+        # Reset file pointer to the beginning before uploading
+        file_data.seek(0)
+        
+        # Upload the file to GCS
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(file_data.name)
 
-    # Reset file pointer to the beginning
-    file_data.seek(0)
+        blob.upload_from_file(file_data, content_type='text/csv')
+        
+        st.success(f"File {file_data.name} uploaded successfully to bucket: {bucket_name}.")
     
-    # Upload the file
-    blob.upload_from_file(file_data, content_type='text/csv')
-    
-    st.success(f"File {file_name} uploaded successfully to bucket: {bucket_name}.")
-
+    except Exception as e:
+        st.error(f"Error uploading file: {e}")
+        print(f"Error uploading file: {e}")
 
 # Streamlit app
 def main():
@@ -41,7 +45,7 @@ def main():
     
     # Check file size and process upload
     if uploaded_file is not None:
-        if uploaded_file.size > 200 * 1024 * 1024:  # 50 MB limit
+        if uploaded_file.size > 200 * 1024 * 1024:  # 200 MB limit
             st.error("The file size exceeds the 200 MB limit. Please upload a smaller file.")
         else:
             st.write("**File Details:**")
@@ -51,11 +55,7 @@ def main():
             
             if st.button("Upload to GCS"):
                 # Upload the file to Google Cloud Storage
-                try:
-                    upload_to_gcs(bucket_name, uploaded_file.name, uploaded_file)
-                except Exception as e:
-                    st.error(f"An error occurred during upload: {e}")
+                upload_file_to_gcs(bucket_name, uploaded_file)
 
 if __name__ == "__main__":
     main()
-
