@@ -4,23 +4,41 @@ import io
 import os
 
 # Initialize Google Cloud Storage client
-def upload_file_to_gcs(bucket_name, file_data):
+def save_locally_and_upload_to_gcs(bucket_name, file_name, file_data):
     try:
+        # Save the file locally
+        local_path = os.path.join("local_uploads", file_name)
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        
+        # Write the file data to a local file
+        with open(local_path, "wb") as f:
+            f.write(file_data.getbuffer())
+        
+        st.success(f"File {file_name} saved locally at {local_path}.")
+        
+        # Print debug info
+        print(f"File saved locally at: {local_path}")
+        print(f"Bucket name: {bucket_name}")
+        print(f"File name: {file_name}")
+        print(f"File data: {file_data}")
+
         # Reset file pointer to the beginning before uploading
         file_data.seek(0)
         
         # Upload the file to GCS
         client = storage.Client()
         bucket = client.bucket(bucket_name)
-        blob = bucket.blob(file_data.name)
+        blob = bucket.blob(file_name)
 
+        print(f"Uploading file {file_name} to GCS bucket {bucket_name}...")
+        
         blob.upload_from_file(file_data, content_type='text/csv')
         
-        st.success(f"File {file_data.name} uploaded successfully to bucket: {bucket_name}.")
+        st.success(f"File {file_name} uploaded successfully to bucket: {bucket_name}.")
     
     except Exception as e:
-        st.error(f"Error uploading file: {e}")
-        print(f"Error uploading file: {e}")
+        st.error(f"Error saving or uploading file: {e}")
+        print(f"Error saving or uploading file: {e}")
 
 # Streamlit app
 def main():
@@ -53,9 +71,13 @@ def main():
             st.write(f"File type: {uploaded_file.type}")
             st.write(f"File size: {uploaded_file.size / (1024 * 1024):.2f} MB")
             
-            if st.button("Upload to GCS"):
-                # Upload the file to Google Cloud Storage
-                upload_file_to_gcs(bucket_name, uploaded_file)
+            if st.button("Save Locally and Upload to GCS"):
+                # Save locally and then upload the file to Google Cloud Storage
+                try:
+                    save_locally_and_upload_to_gcs(bucket_name, uploaded_file.name, uploaded_file)
+                except Exception as e:
+                    st.error(f"An error occurred during upload: {e}")
 
 if __name__ == "__main__":
     main()
+
