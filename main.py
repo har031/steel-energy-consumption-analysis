@@ -3,26 +3,26 @@ from google.cloud import storage
 import io
 
 # Initialize Google Cloud Storage client
-def upload_file_to_gcs(bucket_name, file_data):
+def upload_file_to_gcs(bucket_name, file_data, file_name):
     try:
         # Reset file pointer to the beginning before uploading
         file_data.seek(0)
-        print("File pointer reset. Ready to upload.")
+        st.write("File pointer reset. Ready to upload.")
 
         # Upload the file to GCS
         client = storage.Client()
         bucket = client.bucket(bucket_name)
-        blob = bucket.blob(file_data.name)
+        blob = bucket.blob(file_name)
 
-        print(f"Starting upload of {file_data.name} to GCS bucket {bucket_name}...")
+        st.write(f"Starting upload of {file_name} to GCS bucket {bucket_name}...")
         blob.upload_from_file(file_data, content_type='text/csv')
-        print(f"Upload of {file_data.name} completed.")
+        st.write(f"Upload of {file_name} completed.")
         
-        st.success(f"File {file_data.name} uploaded successfully to bucket: {bucket_name}.")
+        st.success(f"File {file_name} uploaded successfully to bucket: {bucket_name}.")
     
     except Exception as e:
         st.error(f"Error uploading file: {e}")
-        print(f"Error uploading file: {e}")
+        st.write(f"Error uploading file: {e}")
 
 # Streamlit app
 def main():
@@ -56,9 +56,9 @@ def main():
             st.write(f"File size: {uploaded_file.size / (1024 * 1024):.2f} MB")
             
             if st.button("Upload to GCS"):
-                print("Upload button clicked.")
+                st.write("Upload button clicked.")
                 # Upload the file to Google Cloud Storage
-                upload_file_to_gcs(bucket_name, uploaded_file)
+                upload_file_to_gcs(bucket_name, uploaded_file, uploaded_file.name)
 
 if __name__ == "__main__":
     main()
