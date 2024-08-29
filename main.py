@@ -5,9 +5,31 @@ import json
 import os
 
 def load_google_credentials_from_toml():
-    toml_str = st.secrets["google"]
-    credentials_dict = toml.loads(toml_str)
-    return credentials_dict
+    try:
+        # Retrieve the TOML string from Streamlit secrets
+        toml_str = st.secrets["google"]
+
+        # Ensure the retrieved TOML string is actually a string
+        if not isinstance(toml_str, str):
+            raise ValueError("The Google credentials in secrets are not a valid string.")
+
+        # Load the TOML string into a dictionary
+        credentials_dict = toml.loads(toml_str)
+
+        # Return the credentials dictionary
+        return credentials_dict
+
+    except KeyError:
+        st.error("Google credentials not found in Streamlit secrets.")
+        raise
+
+    except toml.TomlDecodeError:
+        st.error("Failed to decode the TOML string from Google credentials.")
+        raise
+
+    except Exception as e:
+        st.error(f"An unexpected error occurred while loading Google credentials: {str(e)}")
+        raise
 
 def upload_to_gcs(bucket_name, file_name, file_data):
     try:
