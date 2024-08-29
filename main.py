@@ -1,54 +1,28 @@
 import streamlit as st
 from google.cloud import storage
-import toml
-import json
-import os
+import io
 
-def load_google_credentials_from_toml():
+# Initialize Google Cloud Storage client
+def upload_file_to_gcs(bucket_name, file_data):
     try:
-        # Retrieve the TOML string from Streamlit secrets
-        toml_str = st.secrets["google"]
+        # Reset file pointer to the beginning before uploading
+        file_data.seek(0)
+        print("File pointer reset. Ready to upload.")
 
-        # Ensure the retrieved TOML string is actually a string
-        if not isinstance(toml_str, str):
-            raise ValueError("The Google credentials in secrets are not a valid string.")
-
-        # Load the TOML string into a dictionary
-        credentials_dict = toml.loads(toml_str)
-
-        # Return the credentials dictionary
-        return credentials_dict
-
-    except KeyError:
-        st.error("Google credentials not found in Streamlit secrets.")
-        raise
-
-    except toml.TomlDecodeError:
-        st.error("Failed to decode the TOML string from Google credentials.")
-        raise
-
-    except Exception as e:
-        st.error(f"An unexpected error occurred while loading Google credentials: {str(e)}")
-        raise
-
-def upload_to_gcs(bucket_name, file_name, file_data):
-    try:
-        # Load credentials from TOML
-        credentials_dict = load_google_credentials_from_toml()
-        
-        # Initialize Google Cloud Storage client with the credentials
-        client = storage.Client.from_service_account_info(credentials_dict)
-        
+        # Upload the file to GCS
+        client = storage.Client()
         bucket = client.bucket(bucket_name)
-        blob = bucket.blob(file_name)
+        blob = bucket.blob(file_data.name)
 
-        file_data.seek(0)  # Reset file pointer to the beginning
+        print(f"Starting upload of {file_data.name} to GCS bucket {bucket_name}...")
         blob.upload_from_file(file_data, content_type='text/csv')
+        print(f"Upload of {file_data.name} completed.")
         
-        st.success(f"File {file_name} uploaded successfully to bucket: {bucket_name}.")
+        st.success(f"File {file_data.name} uploaded successfully to bucket: {bucket_name}.")
+    
     except Exception as e:
-        st.error(f"Error uploading file to GCS: {e}")
-
+        st.error(f"Error uploading file: {e}")
+        print(f"Error uploading file: {e}")
 
 # Streamlit app
 def main():
@@ -84,7 +58,7 @@ def main():
             if st.button("Upload to GCS"):
                 print("Upload button clicked.")
                 # Upload the file to Google Cloud Storage
-                upload_to_gcs(bucket_name, uploaded_file.name, uploaded_file)
+                upload_file_to_gcs(bucket_name, uploaded_file)
 
 if __name__ == "__main__":
     main()
